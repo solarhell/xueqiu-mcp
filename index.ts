@@ -59,6 +59,7 @@ interface QuoteQuote {
 	symbol: string;
 	current: number;
 	percent: number;
+	chg: number;
 	high: number;
 	low: number;
 	open: number;
@@ -66,18 +67,31 @@ interface QuoteQuote {
 	volume: number;
 	amount: number;
 	turnover_rate: number;
+	volume_ratio: number | null;
 	market_capital: number;
-	float_market_capital: number;
-	pe_ttm: number;
-	pb: number;
+	float_market_capital: number | null;
+	total_shares: number | null;
+	float_shares: number | null;
+	pe_ttm: number | null;
+	pe_lyr: number | null;
+	pe_forecast: number | null;
+	pb: number | null;
+	psr: number | null;
 	eps: number;
-	dividend_yield: number;
+	navps: number | null;
+	dividend_yield: number | null;
+	profit_four: number | null;
 	currency: string;
 	exchange: string;
 	amplitude: number;
 	high52w: number;
 	low52w: number;
 	current_year_percent: number;
+	current_ext: number | null;
+	percent_ext: number | null;
+	chg_ext: number | null;
+	timestamp: number;
+	status: number;
 }
 
 // ---- API functions ----
@@ -132,35 +146,110 @@ async function resolveSymbol(input: string): Promise<string> {
 	return results[0].code;
 }
 
+// ---- Helpers ----
+
+function fmtNum(n: number | null | undefined): string {
+	if (n == null) return "-";
+	const abs = Math.abs(n);
+	if (abs >= 1e12) return `${(n / 1e12).toFixed(2)}万亿`;
+	if (abs >= 1e8) return `${(n / 1e8).toFixed(2)}亿`;
+	if (abs >= 1e4) return `${(n / 1e4).toFixed(2)}万`;
+	return n.toLocaleString("en-US");
+}
+
+function fmtVal(n: number | null | undefined, suffix = ""): string {
+	if (n == null) return "-";
+	return `${n}${suffix}`;
+}
+
+function fmtSign(n: number | null | undefined, suffix = ""): string {
+	if (n == null) return "-";
+	const sign = n >= 0 ? "+" : "";
+	return `${sign}${n}${suffix}`;
+}
+
+function fmtTime(ts: number): string {
+	return new Date(ts).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
+}
+
+function tradingStatus(status: number): string {
+	const map: Record<number, string> = {
+		1: "交易中",
+		2: "盘前",
+		3: "盘后",
+		4: "已收盘",
+		5: "休市",
+	};
+	return map[status] ?? `未知(${status})`;
+}
+
 // ---- Formatters ----
 
 function formatQuote(q: QuoteQuote): string {
-	return [
-		`${q.name}(${q.symbol}): ${q.current} (${q.percent}%)`,
+	const lines: string[] = [
+		`${q.name}(${q.symbol}) ${q.exchange}  ${fmtSign(q.chg)} ${fmtSign(q.percent, "%")}  现价: ${q.current} ${q.currency}`,
+		`[${tradingStatus(q.status)}] ${fmtTime(q.timestamp)}`,
+	];
+
+	// 盘前盘后（美股）
+	if (q.current_ext != null) {
+		lines.push(
+			`盘前/盘后: ${q.current_ext} ${fmtSign(q.chg_ext)} ${fmtSign(q.percent_ext, "%")}`,
+		);
+	}
+
+	lines.push(
 		"",
 		`今开: ${q.open}  昨收: ${q.last_close}`,
 		`最高: ${q.high}  最低: ${q.low}`,
 		`振幅: ${q.amplitude}%`,
-		`成交量: ${q.volume}  成交额: ${q.amount}`,
-		`换手率: ${q.turnover_rate}%`,
-		`总市值: ${q.market_capital}  流通市值: ${q.float_market_capital}`,
-		`市盈率(TTM): ${q.pe_ttm}  市净率: ${q.pb}`,
-		`每股收益: ${q.eps}  股息率: ${q.dividend_yield}%`,
+		`成交量: ${fmtNum(q.volume)}  成交额: ${fmtNum(q.amount)}`,
+		`换手率: ${fmtVal(q.turnover_rate, "%")}  量比: ${fmtVal(q.volume_ratio)}`,
+		"",
+		`总市值: ${fmtNum(q.market_capital)}  流通市值: ${fmtNum(q.float_market_capital)}`,
+		`总股本: ${fmtNum(q.total_shares)}  流通股: ${fmtNum(q.float_shares)}`,
+		"",
+		`市盈率(TTM): ${fmtVal(q.pe_ttm)}  市盈率(静): ${fmtVal(q.pe_lyr)}  市盈率(预): ${fmtVal(q.pe_forecast)}`,
+		`市净率: ${fmtVal(q.pb)}  市销率: ${fmtVal(q.psr)}`,
+		`每股收益: ${fmtVal(q.eps)}  每股净资产: ${fmtVal(q.navps)}`,
+		`股息率: ${fmtVal(q.dividend_yield, "%")}  近四季利润: ${fmtNum(q.profit_four)}`,
+		"",
 		`52周最高: ${q.high52w}  52周最低: ${q.low52w}`,
-		`年初至今: ${q.current_year_percent}%`,
-	].join("\n");
+		`年初至今: ${fmtSign(q.current_year_percent, "%")}`,
+	);
+
+	return lines.join("\n");
+}
+
+function stockTypeLabel(stockType: number): string {
+	const map: Record<number, string> = {
+		1: "沪A",
+		2: "深A",
+		3: "北A",
+		6: "美股",
+		12: "港股通",
+		30: "港股",
+		81: "指数",
+		82: "指数",
+	};
+	return map[stockType] ?? "";
 }
 
 function formatSearchResult(results: SuggestStockData[]): string {
 	if (results.length === 0) return "没有找到匹配的股票";
-	return results.map((r, i) => `${i + 1}. ${r.query} (${r.code})`).join("\n");
+	return results
+		.map((r, i) => {
+			const tag = stockTypeLabel(r.stock_type);
+			return `${i + 1}. ${r.query} (${r.code})${tag ? ` [${tag}]` : ""}`;
+		})
+		.join("\n");
 }
 
 function formatMultiQuotes(quotes: QuoteQuote[]): string {
 	return quotes
 		.map(
 			(q) =>
-				`${q.name}(${q.symbol}): ${q.current} ${q.percent >= 0 ? "+" : ""}${q.percent}%`,
+				`${q.name}(${q.symbol}): ${q.current} ${fmtSign(q.chg)} ${fmtSign(q.percent, "%")}  成交额: ${fmtNum(q.amount)}`,
 		)
 		.join("\n");
 }
@@ -181,7 +270,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"search_stock",
-		"搜索股票，返回匹配的股票列表（代码和名称）。当不确定具体股票代码时使用",
+		"搜索股票，返回匹配的股票列表（代码、名称、市场类型）。当不确定具体股票代码时使用",
 		{ query: z.string().describe("搜索关键词，如 腾讯、茅台、AAPL") },
 		async ({ query }) => {
 			try {
@@ -200,7 +289,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"get_stock",
-		"查询单只股票详细数据（价格、涨跌幅、市值、市盈率、股息率等），支持传入名称或代码，会自动搜索匹配股票代码",
+		"查询单只股票详细数据，包括：实时价格、涨跌幅、盘前盘后(美股)、成交量/额、量比、换手率、总市值/流通市值、市盈率(TTM/静态/预测)、市净率、市销率、每股收益/净资产、股息率、近四季利润、52周高低、交易状态。支持传入名称或代码，会自动搜索匹配股票代码",
 		{
 			symbol: z
 				.string()
@@ -222,7 +311,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"get_stocks",
-		"批量查询多只股票的实时价格和涨跌幅，支持传入名称或代码",
+		"批量查询多只股票的实时价格、涨跌额、涨跌幅和成交额，支持传入名称或代码",
 		{
 			symbols: z
 				.array(z.string())
@@ -246,7 +335,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"get_market_index",
-		"查询大盘指数行情，支持 A股(cn)、美股(us)、港股(hk)",
+		"查询大盘指数行情（价格、涨跌额、涨跌幅），支持 A股(cn)、美股(us)、港股(hk)",
 		{
 			market: z
 				.enum(["cn", "us", "hk"])

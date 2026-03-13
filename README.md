@@ -11,10 +11,10 @@
 
 | 工具 | 说明 |
 | --- | --- |
-| `search_stock` | 搜索股票，返回匹配的股票列表（代码和名称） |
-| `get_stock` | 查询单只股票详细数据（价格、涨跌幅、市值、市盈率、股息率等） |
-| `get_stocks` | 批量查询多只股票的实时价格和涨跌幅 |
-| `get_market_index` | 查询大盘指数行情，支持 A股(cn)、美股(us)、港股(hk) |
+| `search_stock` | 搜索股票，返回匹配的股票列表（代码、名称、市场类型） |
+| `get_stock` | 查询单只股票详细数据（价格、涨跌幅、盘前盘后、成交量/额、量比、市值、市盈率、市净率、市销率、股息率、交易状态等） |
+| `get_stocks` | 批量查询多只股票的实时价格、涨跌额、涨跌幅和成交额 |
+| `get_market_index` | 查询大盘指数行情（价格、涨跌额、涨跌幅），支持 A股(cn)、美股(us)、港股(hk) |
 
 ## 安装
 
@@ -27,7 +27,7 @@
   "mcpServers": {
     "xueqiu-mcp": {
       "command": "bunx",
-      "args": ["-y", "xueqiu-mcp"]
+      "args": ["-y", "xueqiu-mcp@latest"]
     }
   }
 }
@@ -44,7 +44,7 @@ npm install -g xueqiu-mcp
 ### Claude Code
 
 ```bash
-claude mcp add xueqiu-mcp -- bunx -y xueqiu-mcp
+claude mcp add xueqiu-mcp -- bunx -y xueqiu-mcp@latest
 ```
 
 ### HTTP 模式
@@ -52,7 +52,7 @@ claude mcp add xueqiu-mcp -- bunx -y xueqiu-mcp
 如果需要通过 HTTP 方式接入：
 
 ```bash
-MCP_TRANSPORT_TYPE=http MCP_HTTP_PORT=3000 bunx xueqiu-mcp
+MCP_TRANSPORT_TYPE=http MCP_HTTP_PORT=3000 bunx xueqiu-mcp@latest
 ```
 
 服务启动后，MCP 端点为 `http://localhost:3000/mcp`。
