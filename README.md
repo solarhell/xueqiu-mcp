@@ -1,5 +1,10 @@
 # xueqiu-mcp
 
+[![npm version](https://img.shields.io/npm/v/xueqiu-mcp)](https://www.npmjs.com/package/xueqiu-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/xueqiu-mcp)](https://www.npmjs.com/package/xueqiu-mcp)
+[![CI](https://github.com/solarhell/xueqiu-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/solarhell/xueqiu-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 雪球股票数据 MCP Server，提供 A股、港股、美股的实时行情查询。
 
 ## 功能
