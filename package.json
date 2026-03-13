@@ -15,7 +15,8 @@
 		"build": "bun build index.ts --target=node --outdir=dist",
 		"check": "biome check",
 		"fix": "biome check --fix",
-		"inspector": "bunx @anthropic-ai/mcp-inspector --config mcp.json --server xueqiu-mcp",
+		"inspector:web": "bunx @modelcontextprotocol/inspector --config mcp.json --server xueqiu-mcp",
+		"inspector:cli": "bunx @modelcontextprotocol/inspector --cli --config mcp.json --server xueqiu-mcp",
 		"prepublishOnly": "bun run build"
 	},
 	"keywords": [

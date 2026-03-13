@@ -153,7 +153,7 @@ function formatQuote(q: QuoteQuote): string {
 
 function formatSearchResult(results: SuggestStockData[]): string {
 	if (results.length === 0) return "没有找到匹配的股票";
-	return results.map((r, i) => `${i + 1}. ${r.label} (${r.code})`).join("\n");
+	return results.map((r, i) => `${i + 1}. ${r.query} (${r.code})`).join("\n");
 }
 
 function formatMultiQuotes(quotes: QuoteQuote[]): string {
@@ -181,7 +181,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"search_stock",
-		"搜索股票，返回匹配的股票列表（代码和名称）",
+		"搜索股票，返回匹配的股票列表（代码和名称）。当不确定具体股票代码时使用",
 		{ query: z.string().describe("搜索关键词，如 腾讯、茅台、AAPL") },
 		async ({ query }) => {
 			try {
@@ -200,7 +200,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"get_stock",
-		"查询单只股票详细数据，包括价格、涨跌幅、市值、市盈率、股息率等",
+		"查询单只股票详细数据（价格、涨跌幅、市值、市盈率、股息率等），支持传入名称或代码，会自动搜索匹配股票代码",
 		{
 			symbol: z
 				.string()
@@ -222,7 +222,7 @@ function createServer(): McpServer {
 
 	server.tool(
 		"get_stocks",
-		"批量查询多只股票的实时价格和涨跌幅",
+		"批量查询多只股票的实时价格和涨跌幅，支持传入名称或代码",
 		{
 			symbols: z
 				.array(z.string())
