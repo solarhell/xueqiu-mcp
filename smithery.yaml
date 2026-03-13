@@ -1,0 +1,10 @@
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction: |
+    (config) => ({
+      "command": "bunx",
+      "args": ["-y", "xueqiu-mcp"]
+    })

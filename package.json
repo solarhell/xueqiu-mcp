@@ -1,0 +1,44 @@
+{
+	"name": "xueqiu-mcp",
+	"version": "1.0.0",
+	"description": "雪球股票数据 MCP Server",
+	"type": "module",
+	"bin": {
+		"xueqiu-mcp": "dist/index.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"start": "bun run index.ts",
+		"start:http": "MCP_TRANSPORT_TYPE=http bun run index.ts",
+		"build": "bun build index.ts --target=node --outdir=dist",
+		"check": "biome check",
+		"fix": "biome check --fix",
+		"inspector": "bunx @anthropic-ai/mcp-inspector --config mcp.json --server xueqiu-mcp",
+		"prepublishOnly": "bun run build"
+	},
+	"keywords": [
+		"mcp",
+		"xueqiu",
+		"stock",
+		"finance"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/solarhell/xueqiu-mcp.git"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.6",
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.19.11",
+		"@modelcontextprotocol/sdk": "^1.27.1",
+		"hono": "^4.12.7"
+	}
+}

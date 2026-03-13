@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"xueqiu-mcp": {
+			"type": "stdio",
+			"command": "bun",
+			"args": ["run", "index.ts"]
+		}
+	}
+}
